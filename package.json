@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^11.5.0",
+    "buffer": "^6.0.3",
     "dotenv": "^16.4.5",
     "firebase-admin": "^13.7.0",
     "grammy": "^1.31.2",

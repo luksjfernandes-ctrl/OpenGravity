@@ -67,3 +67,8 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# OpenGravity Secrets
+service-account.json
+client_secret.json
+memory.db
