@@ -6,23 +6,38 @@ import { readFileSync } from 'fs';
 // Inicializa o Firebase passando o Service Account explicitamente
 try {
   let credential;
+  
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    // Na nuvem (Hugging Face / RailWay) lendo direto da Secret
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-    credential = cert(serviceAccount);
-  } else if (config.GOOGLE_APPLICATION_CREDENTIALS) {
-    // Localmente via arquivo
-    const serviceAccount = JSON.parse(readFileSync(config.GOOGLE_APPLICATION_CREDENTIALS, 'utf-8'));
-    credential = cert(serviceAccount);
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+      credential = cert(serviceAccount);
+    } catch (parseError: any) {
+      console.error("❌ ERRO: FIREBASE_SERVICE_ACCOUNT_JSON existe, mas não é um JSON válido. Verifique se você não colou errado nas Secrets do Hugging Face. Erro:", parseError.message);
+    }
+  } 
+  
+  if (!credential && config.GOOGLE_APPLICATION_CREDENTIALS) {
+    try {
+      // Localmente via arquivo
+      const serviceAccount = JSON.parse(readFileSync(config.GOOGLE_APPLICATION_CREDENTIALS, 'utf-8'));
+      credential = cert(serviceAccount);
+    } catch (fsError: any) {
+      console.error(`❌ ERRO: O arquivo definido em GOOGLE_APPLICATION_CREDENTIALS (${config.GOOGLE_APPLICATION_CREDENTIALS}) não pôde ser lido. Erro:`, fsError.message);
+    }
+  }
+
+  if (credential) {
+    initializeApp({ credential });
+    console.log("🔥 Firebase inicializado via Service Account explícito.");
+  } else {
+    console.warn("⚠️ Nenhuma credencial explícita encontrada. Tentando usar o Application Default Credentials...");
+    initializeApp();
+    console.log("🔥 Firebase inicializado via Application Default Credentials.");
   }
   
-  initializeApp({
-    credential
-  });
-  console.log("🔥 Firebase inicializado via admin SDK.");
 } catch (e: any) {
   if (!/already exists/.test(e.message)) {
-    console.error("Erro ao inicializar Firebase", e);
+    console.error("Erro fatal ao inicializar Firebase", e);
   }
 }
 
