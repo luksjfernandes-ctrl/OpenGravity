@@ -1,6 +1,6 @@
 FROM node:20-bullseye-slim
 
-RUN apt-get update && apt-get install -y ffmpeg tzdata python3 make g++ && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ffmpeg tzdata && rm -rf /var/lib/apt/lists/*
 ENV TZ="America/Sao_Paulo"
 EXPOSE 7860
 WORKDIR /app
