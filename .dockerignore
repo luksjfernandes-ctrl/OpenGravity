@@ -3,5 +3,13 @@ dist/
 .env
 memory.db
 service-account.json
+client_secret.json
 .git
 .gitignore
+.DS_Store
+.firebase/
+.firebaserc
+firebase.json
+firestore.rules
+firestore.indexes.json
+skills/
