@@ -14,4 +14,24 @@ const envSchema = z.object({
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
 });
 
-export const config = envSchema.parse(process.env);
+let parsedEnv: any;
+try {
+  parsedEnv = envSchema.parse(process.env);
+} catch (e: any) {
+  console.error("❌ ERRO DE CONFIGURAÇÃO (Environment Variables):");
+  if (e instanceof z.ZodError) {
+    console.error(JSON.stringify(e.format(), null, 2));
+  } else {
+    console.error(e.message);
+  }
+  // No cloud, queremos que o processo continue o mínimo para o Healthcheck funcionar e nos mostrar o erro
+  parsedEnv = {
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
+    TELEGRAM_ALLOWED_USER_IDS: (process.env.TELEGRAM_ALLOWED_USER_IDS || '').split(','),
+    GROQ_API_KEY: process.env.GROQ_API_KEY || '',
+    OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || 'openrouter/free',
+    DB_PATH: process.env.DB_PATH || './memory.db',
+  };
+}
+
+export const config = parsedEnv;

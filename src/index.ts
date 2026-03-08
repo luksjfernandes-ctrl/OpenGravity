@@ -1,6 +1,7 @@
 import { bot } from './bot.js';
 import http from 'http';
 import { webhookCallback } from 'grammy';
+import { config } from './config.js';
 
 let lastError = "No errors";
 
@@ -28,19 +29,30 @@ async function main() {
   
   const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/') {
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.end(`OpenGravity Bot Status.\\nLast Error: ${lastError}\\n`);
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(`OpenGravity (V2: Webhook Mode) Is Up.\\nÚltimo Erro (se houver): ${lastError}\\n`);
       return;
     }
     
     if (req.method === 'POST' && req.url === '/webhook') {
+      // Se não houver token configurado, não tente processar
+      if (!config.TELEGRAM_BOT_TOKEN) {
+         res.writeHead(500);
+         res.end("Bot Token Missing");
+         return;
+      }
       const handleUpdate = webhookCallback(bot, 'http');
-      return handleUpdate(req, res).catch(err => {
+      try {
+        await handleUpdate(req, res);
+      } catch (err: any) {
          lastError = `Webhook Error: ${err.message}`;
          console.error(lastError);
-         res.writeHead(500);
-         res.end();
-      });
+         if (!res.writableEnded) {
+           res.writeHead(500);
+           res.end();
+         }
+      }
+      return;
     }
     
     res.writeHead(404);
