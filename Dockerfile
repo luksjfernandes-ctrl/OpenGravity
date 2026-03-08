@@ -14,8 +14,5 @@ RUN npm install
 # Copia o resto do código da aplicação
 COPY . .
 
-# Compila o TypeScript (se necessário)
-RUN npx tsc --noEmit || true
-
 # Comando para iniciar o agente
 CMD ["npm", "run", "start"]
