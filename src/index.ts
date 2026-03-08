@@ -1,4 +1,5 @@
 import { bot } from './bot.js';
+import http from 'http';
 
 async function main() {
   console.log('Iniciando OpenGravity');
@@ -19,8 +20,19 @@ async function main() {
   // Start polling
   bot.start({
     onStart(botInfo) {
-      console.log(`Bot conectado com sucesso como @${botInfo.username}`);
+      console.log(`🤖 Bot conectado com sucesso como @${botInfo.username}`);
     }
+  });
+
+  // Dummy web server to satisfy Hugging Face Spaces port requirement (7860)
+  const port = process.env.PORT || 7860;
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('OpenGravity Bot is running.\\n');
+  });
+
+  server.listen(port, () => {
+    console.log(`🌐 Servidor de HealthCheck web escutando na porta ${port}`);
   });
 }
 
