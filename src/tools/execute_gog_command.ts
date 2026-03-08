@@ -5,14 +5,19 @@ const execPromise = util.promisify(exec);
 
 export const executeGogCommandTool = {
   name: 'execute_gog_command',
-  description: `Executa comandos da CLI 'gog' integrando o agente aos serviços Google Workspace (Gmail, Calendar, Drive, Docs, Sheets, Contacts).
+  description: `Executa comandos da CLI 'gog' integrando o agente aos serviços Google Workspace.
   
-REGRAS CRÍTICAS (PROTOCOLO ISS):
-1. COMANDOS DE MUTAÇÃO SÃO PERIGOSOS (ex: 'send', 'create', 'update', 'append', 'clear', 'drafts send'). Você DEVE OBTER a confirmação expressa do usuário ANTES de rodar um comando mutacional usando a ferramenta de mensagem (ou ditar por voz) para pedir "Confirma o envio?".
-2. Apenas execute mutações de fato SE E SOMENTE SE o usuário acabou de dizer explicitamente "Sim, confirme", "Sim", "Pode enviar" na última mensagem!
-3. Comandos de LEITURA (ex: 'search', 'list', 'get', 'cat') PODEM E DEVEM ser executados silenciosa e autonomamente para você compreender o mundo e formular sua resposta.
-4. Ao montar emails com quebras de linha/html, use um processo onde você primeiro salva um arquivo via tool de write e depois usa \`--body-file\`, caso haja complexidade de escapar aspas. Para textos simples de uma linha, não precisa.
-5. Sempre forneça o comando exato em formato \`gog ...\``,
+REGRAS CRÍTICAS DE SINTAXE E USO (PROTOCOLO ISS):
+1. COMANDOS DE MUTAÇÃO ('send', 'create', 'update', 'clear') DEVEM ter permissão prévia do usuário.
+2. Comandos DISPONÍVEIS EXATOS:
+   - Agenda (Eventos da Semana): gog calendar events primary --from 2024-05-01T00:00:00Z --to 2024-05-08T00:00:00Z --json
+   - Agenda (Criar Evento): gog calendar create primary --summary "Ex" --from 2024-05-01T10:00:00Z --to 2024-05-01T11:00:00Z
+   - Gmail (Consultar Inbox): gog gmail messages search "in:inbox" --max 10 --json
+   - Gmail (Enviar Simples): gog gmail send --to x@x.com --subject "Oi" --body "Texto"
+3. JAMAIS invente flags que não existem (ex: '--time-min', '--calenderid'). Sempre use flags '--from' e '--to' de Data ISO8601, e 'primary' para agenda principal.
+4. Para listar eventos da agenda, NUNCA use 'gog calendar list', use SEMPRE 'gog calendar events primary --from [DataISO] --to [DataISO] --json'.
+5. JAMAIS use chaves ou aspas erradas que quebrem o shell.
+6. Todos comandos devem iniciar exatamente com 'gog '.`,
   parameters: {
     type: 'object',
     properties: {
