@@ -1,5 +1,7 @@
-FROM node:20-alpine
+FROM node:20-bullseye-slim
 
+RUN apt-get update && apt-get install -y ffmpeg tzdata && rm -rf /var/lib/apt/lists/*
+ENV TZ="America/Sao_Paulo"
 WORKDIR /app
 
 # Copia os arquivos de dependência
