@@ -6,8 +6,8 @@ import { writeTempFileTool } from './write_temp_file.js';
 export const tools = [
   getCurrentTimeTool,
   sendVoiceMessageTool,
-  executeGogCommandTool,
-  writeTempFileTool
+  // executeGogCommandTool, // Disabled temporarily for HF cloud to avoid hallucination loop
+  // writeTempFileTool
 ];
 
 export type AgentContext = {
