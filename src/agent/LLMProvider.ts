@@ -1,5 +1,6 @@
 import Groq from 'groq-sdk';
 import { config } from '../config.js';
+import fs from 'fs';
 
 let groqClient: Groq | null = null;
 if (config.GROQ_API_KEY) {
@@ -58,3 +59,19 @@ export async function chatCompletion(
     }
   }
 }
+
+export async function transcribeAudio(filePath: string): Promise<string> {
+  if (!groqClient) throw new Error("Groq API key missing.");
+  try {
+    const transcription = await groqClient.audio.transcriptions.create({
+      file: fs.createReadStream(filePath),
+      model: 'whisper-large-v3',
+      response_format: 'json'
+    });
+    return transcription.text;
+  } catch (error: any) {
+    console.error("Groq Transcribe error:", error);
+    throw new Error(`Failed to transcribe audio: ${error.message}`);
+  }
+}
+
