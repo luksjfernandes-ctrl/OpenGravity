@@ -1,18 +1,7 @@
-FROM node:20-bullseye-slim
-
-RUN apt-get update && apt-get install -y ffmpeg tzdata && rm -rf /var/lib/apt/lists/*
-ENV TZ="America/Sao_Paulo"
-EXPOSE 7860
+FROM node:20
 WORKDIR /app
-
-# Copia os arquivos de dependência
-COPY package*.json ./
-
-# Instala as dependências
-RUN npm install
-
-# Copia o resto do código da aplicação
 COPY . .
-
-# Comando para iniciar o agente
-CMD ["npm", "run", "start"]
+RUN npm install
+EXPOSE 7860
+ENV PORT=7860
+CMD ["npx", "tsx", "src/index.ts"]
