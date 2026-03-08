@@ -1,10 +1,10 @@
 import { chatCompletion, Message } from './LLMProvider.js';
-import { toolsMap, toolDefinitions } from '../tools/index.js';
+import { toolsMap, toolDefinitions, AgentContext } from '../tools/index.js';
 import { saveMessage, getRecentMessages } from '../db.js';
 
 const MAX_ITERATIONS = 5;
 
-export async function processUserMessage(userId: string, text: string): Promise<string> {
+export async function processUserMessage(userId: string, text: string, contextCallbacks?: AgentContext): Promise<string> {
   // Save user message to memory
   await saveMessage({
     userId,
@@ -68,7 +68,7 @@ export async function processUserMessage(userId: string, text: string): Promise<
           } else {
             console.log(`Executing tool: ${toolName} with args:`, args);
             // Wait for tool execution
-            toolResponseStr = await tool.execute(args);
+            toolResponseStr = await tool.execute(args, contextCallbacks);
           }
         } catch (e: any) {
           toolResponseStr = `Error executing tool: ${e.message}`;

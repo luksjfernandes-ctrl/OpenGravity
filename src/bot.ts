@@ -1,4 +1,4 @@
-import { Bot, Context } from 'grammy';
+import { Bot, Context, InputFile } from 'grammy';
 import { config } from './config.js';
 import { processUserMessage } from './agent/AgentLoop.js';
 import { transcribeAudio } from './agent/LLMProvider.js';
@@ -29,9 +29,15 @@ bot.on('message:text', async (ctx: Context) => {
   try {
     // Show typing status
     await ctx.replyWithChatAction('typing');
+
+    const callbacks = {
+      sendVoice: async (buffer: Buffer) => {
+        await ctx.replyWithVoice(new InputFile(buffer));
+      }
+    };
     
     // Process message through Agent loop
-    const response = await processUserMessage(userId, text);
+    const response = await processUserMessage(userId, text, callbacks);
     
     // Send response back
     await ctx.reply(response);
@@ -80,8 +86,14 @@ bot.on(['message:voice', 'message:audio'], async (ctx: Context) => {
     // Optional: Let user know what we heard
     // await ctx.reply(`*Áudio transcrito:* ${transcribedText}`, { parse_mode: 'Markdown' });
     
+    const callbacks = {
+      sendVoice: async (buffer: Buffer) => {
+        await ctx.replyWithVoice(new InputFile(buffer));
+      }
+    };
+
     // Process message through Agent loop
-    const response = await processUserMessage(userId, transcribedText);
+    const response = await processUserMessage(userId, transcribedText, callbacks);
     
     // Send response back
     await ctx.reply(response);
