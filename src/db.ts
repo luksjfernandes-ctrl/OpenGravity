@@ -1,28 +1,36 @@
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { config } from './config.js';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 
 // Inicializa o Firebase passando o Service Account explicitamente
 try {
   let credential;
   
+  // Cloud: JSON direto via env var
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     try {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
       credential = cert(serviceAccount);
+      console.log("🔑 Firebase credential: env var FIREBASE_SERVICE_ACCOUNT_JSON");
     } catch (parseError: any) {
-      console.error("❌ ERRO: FIREBASE_SERVICE_ACCOUNT_JSON existe, mas não é um JSON válido. Verifique se você não colou errado nas Secrets do Hugging Face. Erro:", parseError.message);
+      console.error("❌ FIREBASE_SERVICE_ACCOUNT_JSON não é JSON válido:", parseError.message);
     }
   } 
   
+  // Local: arquivo no disco
   if (!credential && config.GOOGLE_APPLICATION_CREDENTIALS) {
-    try {
-      // Localmente via arquivo
-      const serviceAccount = JSON.parse(readFileSync(config.GOOGLE_APPLICATION_CREDENTIALS, 'utf-8'));
-      credential = cert(serviceAccount);
-    } catch (fsError: any) {
-      console.error(`❌ ERRO: O arquivo definido em GOOGLE_APPLICATION_CREDENTIALS (${config.GOOGLE_APPLICATION_CREDENTIALS}) não pôde ser lido. Erro:`, fsError.message);
+    const filePath = config.GOOGLE_APPLICATION_CREDENTIALS;
+    if (existsSync(filePath)) {
+      try {
+        const serviceAccount = JSON.parse(readFileSync(filePath, 'utf-8'));
+        credential = cert(serviceAccount);
+        console.log(`🔑 Firebase credential: arquivo ${filePath}`);
+      } catch (fsError: any) {
+        console.error(`❌ Erro ao ler ${filePath}:`, fsError.message);
+      }
+    } else {
+      console.warn(`⚠️ GOOGLE_APPLICATION_CREDENTIALS aponta para ${filePath}, mas o arquivo não existe. Ignorando (normal em cloud).`);
     }
   }
 
