@@ -2,12 +2,24 @@ import { getCurrentTimeTool } from './get_current_time.js';
 import { sendVoiceMessageTool } from './send_voice_message.js';
 import { executeGogCommandTool } from './execute_gog_command.js';
 import { writeTempFileTool } from './write_temp_file.js';
+import {
+  browseUrlTool,
+  browserClickTool,
+  browserTypeTool,
+  browserSnapshotTool,
+  browserCloseTool
+} from './browser.js';
 
 export const tools = [
   getCurrentTimeTool,
   sendVoiceMessageTool,
-  // executeGogCommandTool, // Disabled temporarily for HF cloud to avoid hallucination loop
-  // writeTempFileTool
+  browseUrlTool,
+  browserClickTool,
+  browserTypeTool,
+  browserSnapshotTool,
+  browserCloseTool,
+  // executeGogCommandTool, // Only for local (needs gog CLI)
+  // writeTempFileTool,
 ];
 
 export type AgentContext = {

@@ -2,7 +2,7 @@ import { chatCompletion, Message } from './LLMProvider.js';
 import { toolsMap, toolDefinitions, AgentContext } from '../tools/index.js';
 import { saveMessage, getRecentMessages } from '../db.js';
 
-const MAX_ITERATIONS = 5;
+const MAX_ITERATIONS = 8;
 
 export async function processUserMessage(userId: string, text: string, contextCallbacks?: AgentContext): Promise<string> {
   // Save user message to memory
