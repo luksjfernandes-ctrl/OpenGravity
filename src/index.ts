@@ -5,6 +5,9 @@ let lastError = "No errors";
 let botReady = false;
 let botInstance: any = null;
 
+// Queue for webhook updates that arrive before bot is ready (cold start)
+const pendingUpdates: any[] = [];
+
 async function main() {
   const startTime = new Date().toISOString();
   console.log(`===== OpenGravity Startup at ${startTime} =====`);
@@ -78,25 +81,28 @@ async function main() {
         res.writeHead(200);
         res.end();
 
-        if (!botReady || !botInstance) {
-          console.warn("Webhook received but bot not ready, ignoring.");
-          return;
-        }
-
-        // Parse and process asynchronously (fire and forget)
+        // Parse body early — needed for both queue and immediate processing
+        let body: any;
         try {
-          const body = JSON.parse(Buffer.concat(chunks).toString());
-          console.log(`📩 Webhook update received: ${body.update_id}`);
-          
-          // Process update through grammY in background
-          botInstance.handleUpdate(body).catch((err: any) => {
-            lastError = `HandleUpdate Error: ${err.message}`;
-            console.error(lastError);
-          });
+          body = JSON.parse(Buffer.concat(chunks).toString());
         } catch (err: any) {
           lastError = `Webhook JSON Parse Error: ${err.message}`;
           console.error(lastError);
+          return;
         }
+
+        if (!botReady || !botInstance) {
+          console.warn(`⏳ Bot not ready yet, queuing update ${body.update_id}`);
+          pendingUpdates.push(body);
+          return;
+        }
+
+        // Process asynchronously (fire and forget)
+        console.log(`📩 Webhook update received: ${body.update_id}`);
+        botInstance.handleUpdate(body).catch((err: any) => {
+          lastError = `HandleUpdate Error: ${err.message}`;
+          console.error(lastError);
+        });
       });
       return;
     }
@@ -157,6 +163,31 @@ async function main() {
 
     botReady = true;
     console.log("✅ Bot pronto.");
+
+    // Process any updates that arrived during cold start
+    if (pendingUpdates.length > 0) {
+      console.log(`📬 Processing ${pendingUpdates.length} queued update(s)...`);
+      for (const update of pendingUpdates) {
+        botInstance.handleUpdate(update).catch((err: any) => {
+          console.error(`HandleUpdate (queued) Error: ${err.message}`);
+        });
+      }
+      pendingUpdates.length = 0;
+    }
+
+    // Keep-alive self-ping every 10 minutes to prevent Render free tier spin-down
+    const externalUrl = process.env.RENDER_EXTERNAL_URL;
+    if (externalUrl) {
+      const KEEP_ALIVE_MS = 10 * 60 * 1000; // 10 minutes
+      setInterval(() => {
+        fetch(externalUrl).then(r => {
+          console.log(`🏓 Keep-alive ping: ${r.status}`);
+        }).catch(err => {
+          console.warn(`🏓 Keep-alive ping failed: ${err.message}`);
+        });
+      }, KEEP_ALIVE_MS);
+      console.log(`🏓 Keep-alive configurado: ping a cada 10min para ${externalUrl}`);
+    }
     
   } catch (err: any) {
     lastError = `Bot Init Error: ${err.message}\n${err.stack}`;

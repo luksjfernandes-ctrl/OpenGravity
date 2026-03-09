@@ -39,24 +39,42 @@ export async function chatCompletion(
     const data = await res.json();
     return data.choices[0].message;
   } else {
-    // Groq logic
+    // Groq logic with retry + exponential backoff
     if (!groqClient) throw new Error("Groq API key missing.");
-    try {
-      // TypeScript requires any cast here because groq-sdk typings may differ slightly 
-      // regarding tool calls and messages format depending on SDK version.
-      const response = await groqClient.chat.completions.create({
-        model: 'llama-3.3-70b-versatile', // Update this based on latest Groq offering
-        messages: messages as any,
-        tools: tools.length > 0 ? tools : undefined
-      });
-      return response.choices[0].message;
-    } catch (e: any) {
-      console.warn("Groq error, falling back to OpenRouter if configured:", e.message);
-      if (config.OPENROUTER_API_KEY) {
-        return chatCompletion(messages, tools, true);
+    const MAX_RETRIES = 3;
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await groqClient.chat.completions.create({
+          model: 'llama-3.3-70b-versatile',
+          messages: messages as any,
+          tools: tools.length > 0 ? tools : undefined
+        });
+        return response.choices[0].message;
+      } catch (e: any) {
+        lastError = e;
+        const status = e?.status || e?.statusCode;
+        const isRetryable = status === 429 || (status >= 500 && status < 600);
+
+        if (isRetryable && attempt < MAX_RETRIES) {
+          const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+          console.warn(`⚠️ Groq ${status} (attempt ${attempt}/${MAX_RETRIES}), retrying in ${delay}ms...`);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+
+        console.warn(`Groq error (attempt ${attempt}/${MAX_RETRIES}):`, e.message);
+        break;
       }
-      throw e;
     }
+
+    // Fallback to OpenRouter
+    if (config.OPENROUTER_API_KEY) {
+      console.log('🔄 Falling back to OpenRouter...');
+      return chatCompletion(messages, tools, true);
+    }
+    throw lastError;
   }
 }
 

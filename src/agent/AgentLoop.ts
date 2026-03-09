@@ -31,12 +31,16 @@ export async function processUserMessage(userId: string, text: string, contextCa
   ];
 
   for (const row of rawHistory) {
-    messages.push({
-      role: row.role as any,
-      content: row.content,
-      tool_calls: row.tool_calls ? JSON.parse(row.tool_calls) : undefined,
-      tool_call_id: row.tool_call_id || undefined
-    });
+    try {
+      messages.push({
+        role: row.role as any,
+        content: row.content,
+        tool_calls: row.tool_calls ? JSON.parse(row.tool_calls) : undefined,
+        tool_call_id: row.tool_call_id || undefined
+      });
+    } catch (parseErr: any) {
+      console.warn(`⚠️ Skipping corrupted history message: ${parseErr.message}`);
+    }
   }
 
   // Agent iteration loop
