@@ -1,8 +1,10 @@
 import { chatCompletion, Message } from './LLMProvider.js';
 import { toolsMap, toolDefinitions, AgentContext } from '../tools/index.js';
 import { saveMessage, getRecentMessages } from '../db.js';
+import { loadSkills } from './SkillLoader.js';
 
 const MAX_ITERATIONS = 8;
+const skillsContent = loadSkills();
 
 export async function processUserMessage(userId: string, text: string, contextCallbacks?: AgentContext): Promise<string> {
   // Save user message to memory
@@ -14,10 +16,17 @@ export async function processUserMessage(userId: string, text: string, contextCa
 
   // Fetch recent memory context
   const rawHistory = await getRecentMessages(userId, 20);
+  const systemPrompt = 
+    'Você é OpenGravity. Um solucionador de problemas pessoal e autônomo. ' +
+    'Pense passo a passo. Use ferramentas quando necessário. ' +
+    'Comunique-se estritamente em Português. ' +
+    'Você tem acesso a um navegador web (browse_url) para pesquisar e interagir com páginas.' +
+    skillsContent;
+
   const messages: Message[] = [
     {
       role: 'system',
-      content: 'Você é OpenGravity. Um solucionador de problemas pessoal e autônomo. Pense passo a passo. Use ferramentas quando necessário. Comunique-se estritamente em Português.'
+      content: systemPrompt
     }
   ];
 

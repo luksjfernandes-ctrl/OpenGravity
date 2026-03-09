@@ -27,7 +27,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
+# Copy compiled JS from builder stage
 COPY --from=builder /app/dist ./dist
+
+# Copy skill definitions (non-TS files, not copied by tsc)
+COPY src/skills ./src/skills
 
 EXPOSE 7860
 ENV PORT=7860
