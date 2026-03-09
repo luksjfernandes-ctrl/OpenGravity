@@ -16,6 +16,27 @@ import {
   browserSnapshotTool,
   browserCloseTool
 } from './browser.js';
+import {
+  listEmailsTool,
+  readEmailTool,
+  sendEmailTool,
+  searchEmailsTool
+} from './gmail.js';
+import {
+  listEventsTool,
+  createEventTool,
+  deleteEventTool
+} from './calendar.js';
+import {
+  listDriveFilesTool,
+  searchDriveTool,
+  readDriveFileTool
+} from './drive.js';
+import {
+  readGoogleDocTool,
+  createGoogleDocTool
+} from './docs.js';
+import { isGoogleConfigured } from './google_auth.js';
 
 export const tools = [
   getCurrentTimeTool,
@@ -33,6 +54,29 @@ export const tools = [
   // executeGogCommandTool, // Only for local (needs gog CLI)
   // writeTempFileTool,
 ];
+
+// Google tools — only register if OAuth2 is configured
+const googleTools = [
+  listEmailsTool,
+  readEmailTool,
+  sendEmailTool,
+  searchEmailsTool,
+  listEventsTool,
+  createEventTool,
+  deleteEventTool,
+  listDriveFilesTool,
+  searchDriveTool,
+  readDriveFileTool,
+  readGoogleDocTool,
+  createGoogleDocTool,
+];
+
+if (isGoogleConfigured()) {
+  tools.push(...googleTools as any[]);
+  console.log(`🔗 Google tools habilitadas (${googleTools.length} tools)`);
+} else {
+  console.warn('⚠️ Google OAuth2 não configurado — Google tools desabilitadas.');
+}
 
 export type AgentContext = {
   sendVoice?: (buffer: Buffer) => Promise<void>;

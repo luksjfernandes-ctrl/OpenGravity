@@ -14,6 +14,9 @@ const envSchema = z.object({
   DB_PATH: z.string().default('./memory.db'),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
   FIREBASE_SERVICE_ACCOUNT_JSON: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REFRESH_TOKEN: z.string().optional(),
 });
 
 let parsedEnv: z.infer<typeof envSchema>;
