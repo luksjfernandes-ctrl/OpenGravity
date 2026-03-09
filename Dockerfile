@@ -1,11 +1,17 @@
 # ── Stage 1: Build ──────────────────────────────────────
 FROM node:20-alpine AS builder
 
+# Fix DNS resolution issues in HF Spaces free tier
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+
 WORKDIR /app
 
 # Copy package files first for better layer caching
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+
+# Retry npm ci up to 3 times to handle transient network issues
+RUN npm ci --ignore-scripts || npm ci --ignore-scripts || npm ci --ignore-scripts
 
 # Copy source and compile TypeScript to JavaScript
 COPY tsconfig.json ./
@@ -14,6 +20,10 @@ RUN npx tsc
 
 # ── Stage 2: Production Runtime ────────────────────────
 FROM node:20-alpine
+
+# Fix DNS resolution issues in HF Spaces free tier
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
 
 WORKDIR /app
 
