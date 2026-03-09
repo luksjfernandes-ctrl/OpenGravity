@@ -20,11 +20,13 @@ export async function generateSpeech(text: string): Promise<Buffer> {
         stability: 0.5,
         similarity_boost: 0.75
       }
-    })
+    }),
+    signal: AbortSignal.timeout(30000) // 30s timeout
   });
 
   if (!response.ok) {
-    throw new Error(`ElevenLabs error: ${await response.text()}`);
+    const errBody = await response.text().catch(() => 'no body');
+    throw new Error(`ElevenLabs ${response.status}: ${errBody}`);
   }
 
   const arrayBuffer = await response.arrayBuffer();
