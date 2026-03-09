@@ -130,7 +130,9 @@ async function main() {
     console.log(`✅ Bot info: @${bot.botInfo.username}`);
 
     // Register webhook with retry + exponential backoff
+    // Auto-detect webhook URL: WEBHOOK_URL (manual), RENDER_EXTERNAL_URL (Render), SPACE_HOST (HF)
     const webhookUrl = process.env.WEBHOOK_URL 
+      || (process.env.RENDER_EXTERNAL_URL ? `${process.env.RENDER_EXTERNAL_URL}/webhook` : null)
       || (process.env.SPACE_HOST ? `https://${process.env.SPACE_HOST}/webhook` : null);
     
     if (webhookUrl) {
