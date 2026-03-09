@@ -2,6 +2,7 @@ import { getCurrentTimeTool } from './get_current_time.js';
 import { sendVoiceMessageTool } from './send_voice_message.js';
 import { executeGogCommandTool } from './execute_gog_command.js';
 import { writeTempFileTool } from './write_temp_file.js';
+import { searchWebTool } from './search_web.js';
 import {
   browseUrlTool,
   browserClickTool,
@@ -13,6 +14,7 @@ import {
 export const tools = [
   getCurrentTimeTool,
   sendVoiceMessageTool,
+  searchWebTool,
   browseUrlTool,
   browserClickTool,
   browserTypeTool,
