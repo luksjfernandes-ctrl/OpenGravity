@@ -33,6 +33,12 @@ bot.on('message:text', async (ctx: Context) => {
     const callbacks = {
       sendVoice: async (buffer: Buffer) => {
         await ctx.replyWithVoice(new InputFile(buffer));
+      },
+      sendPhoto: async (buffer: Buffer) => {
+        await ctx.replyWithPhoto(new InputFile(buffer));
+      },
+      sendText: async (msg: string) => {
+        await ctx.reply(msg);
       }
     };
     
@@ -89,6 +95,12 @@ bot.on(['message:voice', 'message:audio'], async (ctx: Context) => {
     const callbacks = {
       sendVoice: async (buffer: Buffer) => {
         await ctx.replyWithVoice(new InputFile(buffer));
+      },
+      sendPhoto: async (buffer: Buffer) => {
+        await ctx.replyWithPhoto(new InputFile(buffer));
+      },
+      sendText: async (msg: string) => {
+        await ctx.reply(msg);
       }
     };
 

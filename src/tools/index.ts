@@ -42,6 +42,15 @@ import {
   composioExecuteTool,
   isComposioConfigured
 } from './composio.js';
+import {
+  calculatorTool,
+  weatherTool,
+  wikipediaTool,
+  qrCodeTool,
+  textAnalysisTool,
+  reminderTool,
+  youtubeTranscriptTool
+} from './utils.js';
 
 export const tools = [
   getCurrentTimeTool,
@@ -56,6 +65,13 @@ export const tools = [
   browserTypeTool,
   browserSnapshotTool,
   browserCloseTool,
+  calculatorTool,
+  weatherTool,
+  wikipediaTool,
+  textAnalysisTool,
+  youtubeTranscriptTool,
+  qrCodeTool,
+  reminderTool,
   // executeGogCommandTool, // Only for local (needs gog CLI)
   // writeTempFileTool,
 ];
@@ -93,6 +109,8 @@ if (isComposioConfigured()) {
 
 export type AgentContext = {
   sendVoice?: (buffer: Buffer) => Promise<void>;
+  sendPhoto?: (buffer: Buffer) => Promise<void>;
+  sendText?: (msg: string) => Promise<void>;
 };
 
 type ToolDefinition = {

@@ -43,5 +43,30 @@ Para flexibilizar o Agent e dar diretrizes profundas sem alterar código nativo:
 - `write-technical-blog-post.md`: Orientações profundas de como construir pesquisas e gerar textos técnicos.
 - `deep-research.md`: Passo a passo definindo que o bot quebre grandes temas em perguntas e faça pesquisas em múltiplas fontes para construir uma resposta altamente fundamentada.
 
-## Próximos Passos (Workflow Adiado)
-A etapa seguinte seria adicionar habilidades com `googleapis` para gerir o Google Calendar (ler/criar eventos) e Gmail (ler/enviar emails) via OAuth2 e Firebase Application credentials, substituindo os antigos comandos GOG que precisavam estar atrelados à máquina local do desenvolvedor.
+## 7. Correções de Resiliência e Cold-Start
+Para lidar com a instabilidade do free tier e limitações de APIs terceiras:
+- **Keep-Alive**: Ping interno agendado a cada 10min para manter o container do Render.com ativo na madrugada.
+- **Fila de Mensagens no Cold Start**: Webhooks que chegam antes do Bot e Firestore estarem prontos são agora internalizados em um queue seguro (`pendingUpdates`) para processamento posterior.
+- **Parse do Histórico Resiliente**: Evita crashes do ciclo de Agente caso o Groq retorne arrays corrompidos de `tool_calls`.
+- **Retry Backoff para Groq API**: Recuo exponencial de 3 tentativas para lidar com erros transitórios (429 e 5xx).
+
+## 8. Integração Google APIs (OAuth2)
+Implementadas 12 novas ferramentas baseadas em tokens de refresh para acessar informações pessoais do usuário sem expor senhas:
+- **Gmail**: listagem, busca, leitura e envio de e-mails (`list_emails`, `read_email`, `send_email`, `search_emails`).
+- **Calendar**: listagem, criação e remoção de eventos na agenda primária (`list_events`, `create_event`, `delete_event`).
+- **Drive e Docs**: busca semântica livre e capacidade de listar/ler todos os formatos nativos e PDFs, mais a criação nativa de Documentos baseados em IA.
+
+## 9. Acesso Universal via Composio
+Configurado o Tool Router da plataforma **Composio (1000+ Connectors)**:
+- `composio_find_action`: Busca semântica (ex: "Criar task no Jira", "Notificar no Slack").
+- `composio_execute`: Disparo multi-plataforma padronizado em todo o sistema.
+
+## 10. Protocolo de Confirmação e Expansão de Skills
+Visando proteger a vida digital do usuário (prevenindo ações destrutivas indesejadas pelo bot autônomo), foi adicionada uma **Camada de Confirmação Two-Step**:
+- Todas as ações mutáveis pesadas (`send_email`, `create_event`, `delete_event`, `delete_task`, `create_google_doc`, e `composio_execute`) retornam primeiro um Preview detalhado ao LLM, forçando a solicitação de permissão expressa ("Posso prosseguir?") antes da execução real com a flag interna `confirmed: true`.
+
+Novas **Skills** de contexto foram absorvidas pelo motor (lidas de arquivos Markdown no `src/skills/`):
+- `security-review.md`: Diretrizes ativas de cybersegurança (OWASP, Input validation).
+- `pdf-handling.md`: Diretrizes estruturais de leitura de PDFs complexos.
+- `instituto-apolineo-branding.md`: Estética/arquétipos de design de luxo e linguagem.
+- `apolineo-content-creation.md`: Metodologias exatas de geração de carrosséis e posts.
