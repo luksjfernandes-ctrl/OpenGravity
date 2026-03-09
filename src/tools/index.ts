@@ -4,6 +4,12 @@ import { executeGogCommandTool } from './execute_gog_command.js';
 import { writeTempFileTool } from './write_temp_file.js';
 import { searchWebTool } from './search_web.js';
 import {
+  createTaskTool,
+  listTasksTool,
+  completeTaskTool,
+  deleteTaskTool
+} from './tasks.js';
+import {
   browseUrlTool,
   browserClickTool,
   browserTypeTool,
@@ -15,6 +21,10 @@ export const tools = [
   getCurrentTimeTool,
   sendVoiceMessageTool,
   searchWebTool,
+  createTaskTool,
+  listTasksTool,
+  completeTaskTool,
+  deleteTaskTool,
   browseUrlTool,
   browserClickTool,
   browserTypeTool,
