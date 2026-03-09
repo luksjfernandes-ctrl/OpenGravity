@@ -135,7 +135,7 @@ export const readEmailTool = {
 // ── Tool: send_email ──
 export const sendEmailTool = {
   name: 'send_email',
-  description: 'Envia um email em nome do usuário. Use quando o usuário pedir para enviar, responder, ou escrever um email.',
+  description: `Envia um email em nome do usuário. PROTOCOLO DE SEGURANÇA: Sempre chame PRIMEIRO sem 'confirmed' para gerar preview. Mostre o preview completo ao usuário e peça confirmação explícita. Só então chame novamente com confirmed=true.`,
   parameters: {
     type: 'object',
     properties: {
@@ -150,12 +150,27 @@ export const sendEmailTool = {
       body: {
         type: 'string',
         description: 'Corpo do email em texto plano'
+      },
+      confirmed: {
+        type: 'boolean',
+        description: 'Se true, envia de fato. Se false/omitido, retorna preview para aprovação do usuário.'
       }
     },
     required: ['to', 'subject', 'body']
   },
   execute: async (args: any): Promise<string> => {
     try {
+      // ── CONFIRMATION GATE ──
+      if (!args.confirmed) {
+        return `⚠️ PREVIEW DO EMAIL (não enviado ainda):\n\n` +
+          `Para: ${args.to}\n` +
+          `Assunto: ${args.subject}\n` +
+          `───────────────────\n` +
+          `${args.body}\n` +
+          `───────────────────\n\n` +
+          `🔒 Mostre este preview ao usuário e peça confirmação. Se confirmado, chame send_email novamente com confirmed=true.`;
+      }
+
       const gmail = getGmail();
 
       const rawMessage = [

@@ -74,7 +74,7 @@ export const readGoogleDocTool = {
 // ── Tool: create_google_doc ──
 export const createGoogleDocTool = {
   name: 'create_google_doc',
-  description: 'Cria um novo Google Doc com título e conteúdo. Use quando o usuário pedir para criar, escrever, ou redigir um documento.',
+  description: `Cria um novo Google Doc com título e conteúdo. PROTOCOLO DE SEGURANÇA: Sempre chame PRIMEIRO sem 'confirmed' para gerar preview. Mostre ao usuário e peça confirmação. Só então chame com confirmed=true.`,
   parameters: {
     type: 'object',
     properties: {
@@ -89,12 +89,30 @@ export const createGoogleDocTool = {
       folder_id: {
         type: 'string',
         description: 'ID da pasta do Drive onde criar o documento (opcional, padrão: raiz)'
+      },
+      confirmed: {
+        type: 'boolean',
+        description: 'Se true, cria de fato. Se false/omitido, retorna preview para aprovação.'
       }
     },
     required: ['title', 'content']
   },
   execute: async (args: any): Promise<string> => {
     try {
+      // ── CONFIRMATION GATE ──
+      if (!args.confirmed) {
+        const previewContent = args.content.length > 500
+          ? args.content.substring(0, 500) + '\n\n... [truncado no preview]'
+          : args.content;
+        return `⚠️ PREVIEW DO DOCUMENTO (não criado ainda):\n\n` +
+          `📄 Título: ${args.title}\n` +
+          (args.folder_id ? `📁 Pasta: ${args.folder_id}\n` : '') +
+          `───────────────────\n` +
+          `${previewContent}\n` +
+          `───────────────────\n\n` +
+          `🔒 Mostre ao usuário e peça confirmação. Se confirmado, chame create_google_doc com confirmed=true.`;
+      }
+
       const docs = getDocs();
       const drive = getDrive();
 

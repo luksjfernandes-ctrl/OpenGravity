@@ -88,7 +88,7 @@ export const listEventsTool = {
 // ── Tool: create_event ──
 export const createEventTool = {
   name: 'create_event',
-  description: 'Cria um evento no Google Calendar. Use quando o usuário pedir para agendar, marcar reunião, criar compromisso.',
+  description: `Cria um evento no Google Calendar. PROTOCOLO DE SEGURANÇA: Sempre chame PRIMEIRO sem 'confirmed' para gerar preview. Mostre ao usuário e peça confirmação. Só então chame com confirmed=true.`,
   parameters: {
     type: 'object',
     properties: {
@@ -111,12 +111,28 @@ export const createEventTool = {
       location: {
         type: 'string',
         description: 'Local do evento (opcional)'
+      },
+      confirmed: {
+        type: 'boolean',
+        description: 'Se true, cria de fato. Se false/omitido, retorna preview para aprovação.'
       }
     },
     required: ['title', 'start_datetime']
   },
   execute: async (args: any): Promise<string> => {
     try {
+      // ── CONFIRMATION GATE ──
+      if (!args.confirmed) {
+        let preview = `⚠️ PREVIEW DO EVENTO (não criado ainda):\n\n`;
+        preview += `📌 ${args.title}\n`;
+        preview += `📅 Início: ${args.start_datetime}\n`;
+        if (args.end_datetime) preview += `📅 Fim: ${args.end_datetime}\n`;
+        if (args.location) preview += `📍 Local: ${args.location}\n`;
+        if (args.description) preview += `📝 ${args.description}\n`;
+        preview += `\n🔒 Mostre ao usuário e peça confirmação. Se confirmado, chame create_event com confirmed=true.`;
+        return preview;
+      }
+
       const calendar = getCalendar();
       const isAllDay = !args.start_datetime.includes('T');
 
@@ -162,13 +178,17 @@ export const createEventTool = {
 // ── Tool: delete_event ──
 export const deleteEventTool = {
   name: 'delete_event',
-  description: 'Remove um evento do Google Calendar. Use quando o usuário pedir para cancelar ou remover um compromisso.',
+  description: `Remove um evento do Google Calendar. PROTOCOLO DE SEGURANÇA: Sempre chame PRIMEIRO sem 'confirmed' para mostrar qual evento será removido. Peça confirmação. Só então chame com confirmed=true.`,
   parameters: {
     type: 'object',
     properties: {
       event_id: {
         type: 'string',
         description: 'ID do evento (obtido via list_events)'
+      },
+      confirmed: {
+        type: 'boolean',
+        description: 'Se true, remove de fato. Se false/omitido, mostra preview.'
       }
     },
     required: ['event_id']
@@ -176,6 +196,20 @@ export const deleteEventTool = {
   execute: async (args: any): Promise<string> => {
     try {
       const calendar = getCalendar();
+
+      if (!args.confirmed) {
+        // Fetch event details for preview
+        try {
+          const event = await calendar.events.get({ calendarId: 'primary', eventId: args.event_id });
+          return `⚠️ PREVIEW DE REMOÇÃO (não removido ainda):\n\n` +
+            `📌 ${event.data.summary || '(sem título)'}\n` +
+            `📅 ${event.data.start?.dateTime || event.data.start?.date || ''}\n\n` +
+            `🔒 Mostre ao usuário e peça confirmação. Se confirmado, chame delete_event com confirmed=true.`;
+        } catch {
+          return `⚠️ Evento ID: ${args.event_id}\n🔒 Confirma remoção? Chame com confirmed=true.`;
+        }
+      }
+
       await calendar.events.delete({
         calendarId: 'primary',
         eventId: args.event_id

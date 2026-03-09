@@ -198,13 +198,17 @@ export const completeTaskTool = {
 // ── Tool: delete_task ──
 export const deleteTaskTool = {
   name: 'delete_task',
-  description: 'Remove uma tarefa permanentemente. Use quando o usuário pedir para excluir/remover uma tarefa.',
+  description: `Remove uma tarefa permanentemente. PROTOCOLO DE SEGURANÇA: Sempre chame PRIMEIRO sem 'confirmed' para mostrar qual tarefa será removida. Peça confirmação. Só então chame com confirmed=true.`,
   parameters: {
     type: 'object',
     properties: {
       task_id: {
         type: 'string',
         description: 'ID da tarefa a ser removida'
+      },
+      confirmed: {
+        type: 'boolean',
+        description: 'Se true, remove de fato. Se false/omitido, mostra preview.'
       }
     },
     required: ['task_id']
@@ -216,6 +220,13 @@ export const deleteTaskTool = {
       if (!doc.exists) return `Tarefa com ID "${args.task_id}" não encontrada.`;
       
       const title = (doc.data() as Task).title;
+
+      if (!args.confirmed) {
+        return `⚠️ PREVIEW DE REMOÇÃO (não removida ainda):\n\n` +
+          `📌 "${title}"\nID: ${args.task_id}\n\n` +
+          `🔒 Mostre ao usuário e peça confirmação. Se confirmado, chame delete_task com confirmed=true.`;
+      }
+
       await docRef.delete();
       return `🗑️ Tarefa removida: "${title}"`;
     } catch (err: any) {
