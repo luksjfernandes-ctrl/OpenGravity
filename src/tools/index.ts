@@ -37,6 +37,11 @@ import {
   createGoogleDocTool
 } from './docs.js';
 import { isGoogleConfigured } from './google_auth.js';
+import {
+  composioFindActionTool,
+  composioExecuteTool,
+  isComposioConfigured
+} from './composio.js';
 
 export const tools = [
   getCurrentTimeTool,
@@ -76,6 +81,14 @@ if (isGoogleConfigured()) {
   console.log(`🔗 Google tools habilitadas (${googleTools.length} tools)`);
 } else {
   console.warn('⚠️ Google OAuth2 não configurado — Google tools desabilitadas.');
+}
+
+// Composio tools — only register if API key is configured
+if (isComposioConfigured()) {
+  tools.push(composioFindActionTool as any, composioExecuteTool as any);
+  console.log('🔗 Composio tools habilitadas (2 tools)');
+} else {
+  console.warn('⚠️ COMPOSIO_API_KEY não configurado — Composio tools desabilitadas.');
 }
 
 export type AgentContext = {
